@@ -3,14 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -21,7 +24,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', 
     ];
 
     /**
@@ -47,35 +49,15 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Check if user is admin
-     */
-    public function isAdmin()
+    public function canAccessPanel(Panel $panel): bool
     {
-        return $this->role === 'admin';
-    }
+        $panelId = $panel->getId();
 
-    /**
-     * Check if user is pegawai
-     */
-    public function isPegawai()
-    {
-        return $this->role === 'pegawai';
-    }
-
-    /**
-     * Check if user is kasir
-     */
-    public function isKasir()
-    {
-        return $this->role === 'kasir';
-    }
-
-    /**
-     * Check if user is konsumen
-     */
-    public function isKonsumen()
-    {
-        return $this->role === 'konsumen';
+        return match (true) {
+            $this->hasRole('superadmin') && $panelId === 'admin' => true,
+            $this->hasRole('admin') && $panelId === 'admin' => true,
+            $this->hasRole('user') && $panelId === 'u' => true,
+            default => false,
+        };
     }
 }

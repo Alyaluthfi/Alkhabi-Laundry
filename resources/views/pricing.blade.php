@@ -139,7 +139,7 @@
         const isLoggedIn = @json($user !== null);
 
         if (isLoggedIn) {
-            window.location.href = "{{ route('pesan.create.step1') }}";
+            window.location.href = "{{ route('filament.u.auth.login') }}";
         } else {
             Swal.fire({
                 icon: 'warning',
@@ -149,7 +149,7 @@
                 confirmButtonColor: '#d33',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = "{{ route('register') }}";
+                    window.location.href = "{{ route('filament.u.auth.register') }}";
                 }
             });
         }

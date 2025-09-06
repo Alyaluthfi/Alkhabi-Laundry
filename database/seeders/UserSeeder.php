@@ -5,41 +5,43 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin
-        User::create([
-            'name' => 'Admin Alkhabi',
-            'email' => 'admin@alkhabi.com',
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        Role::firstOrCreate(['name' => 'superadmin']);
+        Role::firstOrCreate(['name' => 'admin']);
+        Role::firstOrCreate(['name' => 'user']);
+
+        // Create a default superadmin user
+        $superadmin = User::firstOrCreate([
+            'email' => 'alkhabi@gmail.com',
             'password' => Hash::make('password'),
-            'role' => 'admin'
+            'name' => 'Alkhabi Superadmin',
         ]);
 
-        // Pegawai
-        User::create([
-            'name' => 'Pegawai Laundry',
-            'email' => 'pegawai@alkhabi.com',
+        $superadmin->assignRole('superadmin');
+
+        // Create a default admin user
+        $admin = User::firstOrCreate([
+            'email' => 'admin@gmail.com',
             'password' => Hash::make('password'),
-            'role' => 'pegawai'
+            'name' => 'Admin',
         ]);
 
-        // Kasir
-        User::create([
-            'name' => 'Kasir Alkhabi',
-            'email' => 'kasir@alkhabi.com',
+        $admin->assignRole('admin');
+
+        // Create a default regular user
+        $user = User::firstOrCreate([
+            'email' => 'budi@gmail.com',
             'password' => Hash::make('password'),
-            'role' => 'kasir'
+            'name' => 'Budi',
         ]);
 
-        // Konsumen contoh
-        User::create([
-            'name' => 'Konsumen Test',
-            'email' => 'konsumen@test.com',
-            'password' => Hash::make('password'),
-            'role' => 'konsumen'
-        ]);
+        $user->assignRole('user');
     }
 }
