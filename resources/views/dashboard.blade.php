@@ -1,3 +1,6 @@
+<head>
+    <title>Alkhabi Laundry - Dashboard</title>
+</head>
 <x-app-layout>
     <div class="bg-pink-50 font-sans -mt-20">
         @include('hero')

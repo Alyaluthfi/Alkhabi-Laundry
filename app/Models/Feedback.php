@@ -17,9 +17,16 @@ class Feedback extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'pesanan_id', // <-- WAJIB DITAMBAHKAN DISINI
         'nama_pelanggan',
         'puas_laundry',
         'puas_harga',
         'kritik_saran',
     ];
+
+   
+    public function pesan()
+    {
+        return $this->belongsTo(Pesan::class);
+    }
 }

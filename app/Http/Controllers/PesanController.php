@@ -8,9 +8,6 @@ use Illuminate\Support\Facades\Auth;
 
 class PesanController extends Controller
 {
-    /**
-     * Menampilkan halaman riwayat pesanan yang sudah dikelompokkan.
-     */
     public function riwayat()
     {
         // PERUBAHAN: 'Lunas' sekarang termasuk dalam pesanan aktif karena belum selesai (diambil).
@@ -19,7 +16,6 @@ class PesanController extends Controller
                               ->latest()
                               ->get();
 
-        // PERUBAHAN: Riwayat selesai hanya berisi status final.
         $riwayatSelesai = Pesan::where('user_id', Auth::id())
                                ->whereIn('status', ['Selesai', 'Dibatalkan'])
                                ->latest()
@@ -28,12 +24,8 @@ class PesanController extends Controller
         return view('riwayat.index', compact('pesananAktif', 'riwayatSelesai'));
     }
 
-    /**
-     * Menampilkan halaman detail untuk satu pesanan spesifik.
-     */
     public function show(Pesan $pesan)
     {
-        // Keamanan: Pastikan user yang login adalah pemilik pesanan ini.
         if ($pesan->user_id !== Auth::id()) {
             abort(403, 'AKSES TIDAK DIIZINKAN');
         }
