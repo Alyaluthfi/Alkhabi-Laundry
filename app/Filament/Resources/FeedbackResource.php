@@ -3,60 +3,58 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\FeedbackResource\Pages;
-use App\Filament\Resources\FeedbackResource\RelationManagers;
 use App\Models\Feedback;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
 
 class FeedbackResource extends Resource
 {
     protected static ?string $model = Feedback::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationLabel = 'Feedback Pelanggan';
-    protected static ?string $navigationGroup = 'Manajemen';
+     // --- KONFIGURASI LABEL (Tambahkan Ini) ---
+    protected static ?string $modelLabel = 'Ulasan Pelanggaan'; 
+    protected static ?string $pluralModelLabel = 'Ulasan Pelanggan'; 
+
+    protected static ?string $navigationIcon = 'heroicon-o-star'; // Ikon Bintang
+    protected static ?string $navigationLabel = 'Ulasan Pelanggan';
+    protected static ?string $navigationGroup = 'Manajemen Data';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nama_pelanggan')
-                    ->label('Nama Pelanggan')
-                    ->required()
-                    ->maxLength(255),
+                Section::make('Detail Masukan')
+                    ->schema([
+                        TextInput::make('nama_pelanggan')
+                            ->label('Nama Pengirim')
+                            ->readOnly(),
 
-                Forms\Components\Select::make('puas_laundry')
-                    ->label('Kepuasan terhadap Layanan Laundry')
-                    ->options([
-                        'Sangat Puas' => 'Sangat Puas',
-                        'Puas' => 'Puas',
-                        'Cukup' => 'Cukup',
-                        'Kurang' => 'Kurang',
-                        'Tidak Puas' => 'Tidak Puas',
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                TextInput::make('puas_laundry')
+                                    ->label('Rating Laundry (1-5)')
+                                    ->readOnly()
+                                    ->suffix('Bintang'),
+                                TextInput::make('puas_harga')
+                                    ->label('Rating Harga (1-5)')
+                                    ->readOnly()
+                                    ->suffix('Bintang'),
+                            ]),
+
+                        Textarea::make('kritik_saran')
+                            ->label('Isi Pesan')
+                            ->rows(4)
+                            ->readOnly(),
                     ])
-                    ->required(),
-
-                Forms\Components\Select::make('puas_harga')
-                    ->label('Kepuasan terhadap Harga')
-                    ->options([
-                        'Sangat Puas' => 'Sangat Puas',
-                        'Puas' => 'Puas',
-                        'Cukup' => 'Cukup',
-                        'Kurang' => 'Kurang',
-                        'Tidak Puas' => 'Tidak Puas',
-                    ])
-                    ->required(),
-
-                Forms\Components\Textarea::make('kritik_saran')
-                    ->label('Kritik & Saran')
-                    ->rows(4)
-                    ->maxLength(1000),
-    
             ]);
     }
 
@@ -64,33 +62,45 @@ class FeedbackResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('nama_pelanggan')->label('Nama'),
-                Tables\Columns\TextColumn::make('puas_laundry')->label('Puas Laundry'),
-                Tables\Columns\TextColumn::make('puas_harga')->label('Puas Harga'),
-                Tables\Columns\TextColumn::make('kritik_saran')->label('Kritik & Saran')->limit(50),
-                Tables\Columns\TextColumn::make('created_at')->dateTime('d M Y, H:i'),
+                TextColumn::make('nama_pelanggan')
+                    ->weight('bold')
+                    ->searchable(),
+                
+                // Rating dengan Warna
+                TextColumn::make('puas_laundry')
+                    ->label('Layanan')
+                    ->badge()
+                    ->color(fn ($state) => $state >= 4 ? 'success' : ($state >= 3 ? 'warning' : 'danger'))
+                    ->formatStateUsing(fn ($state) => $state . ' ★'),
+
+                TextColumn::make('puas_harga')
+                    ->label('Harga')
+                    ->badge()
+                    ->color(fn ($state) => $state >= 4 ? 'success' : ($state >= 3 ? 'warning' : 'danger'))
+                    ->formatStateUsing(fn ($state) => $state . ' ★'),
+
+                TextColumn::make('kritik_saran')
+                    ->label('Pesan')
+                    ->limit(40)
+                    ->tooltip(fn (Feedback $record): string => $record->kritik_saran ?? ''),
+
+                TextColumn::make('created_at')
+                    ->dateTime('d M Y')
+                    ->sortable()
+                    ->label('Tanggal'),
             ])
-            ->filters([
-                //
-            ])
+            ->defaultSort('created_at', 'desc')
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
             ]);
     }
-
+    
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
-
+    
     public static function getPages(): array
     {
         return [

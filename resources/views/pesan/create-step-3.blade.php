@@ -23,9 +23,17 @@
                     <div class="mb-8 p-6 bg-pink-50 border-l-4 border-pink-400 rounded-r-lg space-y-3">
                         <h4 class="font-bold text-lg text-pink-800">Ringkasan Pesanan Anda</h4>
                         <div class="text-sm text-gray-700 space-y-1">
-                            <p><strong>Nama:</strong> {{ $pesanan['nama_pelanggan'] }}</p>
-                            <p><strong>Alamat:</strong> {{ $pesanan['alamat'] }}</p>
-                            <p><strong>Layanan:</strong> <span class="capitalize font-semibold">{{ $pesanan['jenis_layanan'] }}</span></p>
+                            {{-- PERUBAHAN: Tambahkan '??' agar tidak error jika null --}}
+                            <p><strong>Nama:</strong> {{ $pesanan['nama_pelanggan'] ?? '-' }}</p>
+                            
+                            {{-- Tampilkan alamat hanya jika ada --}}
+                            @if(!empty($pesanan['alamat']))
+                                <p><strong>Alamat:</strong> {{ $pesanan['alamat'] }}</p>
+                            @else
+                                <p><strong>Metode:</strong> Datang Sendiri (Drop-off)</p>
+                            @endif
+
+                            <p><strong>Layanan:</strong> <span class="capitalize font-semibold">{{ $pesanan['jenis_layanan'] ?? '-' }}</span></p>
                         </div>
                     </div>
 

@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\Auth;
 class PembayaranController extends Controller
 {
     /**
-     * BARU: Menampilkan daftar semua tagihan yang perlu dibayar.
+     * Menampilkan daftar semua tagihan yang perlu dibayar.
      */
     public function index()
     {
         $tagihans = Pesan::where('user_id', Auth::id())
-                          ->where('status', 'Menunggu Pembayaran')
-                          ->latest()
-                          ->get();
+                         ->where('status', 'Menunggu Pembayaran')
+                         ->latest()
+                         ->get();
 
         return view('pembayaran.index', compact('tagihans'));
     }
@@ -27,42 +27,43 @@ class PembayaranController extends Controller
      */
     public function show(Pesan $pesan)
     {
-        // Keamanan: Pastikan user hanya bisa melihat pembayarannya sendiri
         if ($pesan->user_id !== Auth::id()) {
             abort(403, 'AKSES DITOLAK');
         }
 
-        // Jangan tampilkan halaman pembayaran jika statusnya tidak sesuai
+        // Validasi: Hanya pesanan status 'Menunggu Pembayaran' yang bisa diakses di sini
         if ($pesan->status !== 'Menunggu Pembayaran') {
-             return redirect()->route('riwayat.index')->with('error', 'Tagihan untuk pesanan ini belum tersedia atau sudah lunas.');
+             return redirect()->route('riwayat.index')->with('error', 'Tagihan tidak tersedia.');
         }
 
         return view('pembayaran.show', ['pesanan' => $pesan]);
     }
 
     /**
-     * Mengonfirmasi pembayaran dan mengubah status pesanan.
+     * Mengonfirmasi pembayaran (User Klik "Saya Sudah Bayar")
      */
     public function konfirmasi(Request $request, Pesan $pesan)
     {
-        // Keamanan tambahan
         if ($pesan->user_id !== Auth::id()) {
             abort(403, 'AKSES DITOLAK');
         }
 
-        // Ubah status pesanan menjadi 'Lunas'
-        $pesan->status = 'Lunas';
+        // --- PERBAIKAN LOGIKA DISINI ---
+        
+        // 1. Ubah status jadi 'Menunggu Konfirmasi' agar Admin mendapat notifikasi/tanda
+        // Jangan langsung 'Lunas', karena admin harus cek mutasi bank dulu.
+        $pesan->status = 'Menunggu Konfirmasi'; 
         $pesan->save();
         
-        // Buat record di tabel pembayarans
+        // 2. Buat record pembayaran dengan status 'pending'
         Pembayaran::create([
             'pesanan_id' => $pesan->id,
             'jumlah_bayar' => $pesan->total_harga,
             'metode_pembayaran' => 'QRIS (Konfirmasi Manual)',
-            'status_pembayaran' => 'success',
+            'status_pembayaran' => 'pending', // Pending = Menunggu Admin Cek
         ]);
 
-        // Redirect dengan "sinyal" untuk menampilkan modal feedback.
+        // Redirect ke riwayat dengan trigger modal feedback/notifikasi WA
         return redirect()->route('riwayat.index')->with('showFeedbackModal', true);
     }
 }

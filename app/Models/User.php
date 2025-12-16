@@ -2,43 +2,28 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role', 
+        'role', // Nilai: 'admin' atau 'user'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -47,35 +32,23 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Check if user is admin
-     */
+    // --- HELPER ROLE SEDERHANA ---
+
     public function isAdmin()
     {
         return $this->role === 'admin';
     }
 
-    /**
-     * Check if user is pegawai
-     */
-    public function isPegawai()
+    public function isUser()
     {
-        return $this->role === 'pegawai';
+        return $this->role === 'user' || $this->role === 'konsumen'; // Support kedua istilah
     }
 
-    /**
-     * Check if user is kasir
-     */
-    public function isKasir()
+    // --- KEAMANAN FILAMENT ---
+    
+    public function canAccessPanel(Panel $panel): bool
     {
-        return $this->role === 'kasir';
-    }
-
-    /**
-     * Check if user is konsumen
-     */
-    public function isKonsumen()
-    {
-        return $this->role === 'konsumen';
+        // Hanya role 'admin' yang bisa login ke /admin
+        return $this->isAdmin();
     }
 }

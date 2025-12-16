@@ -10,7 +10,6 @@ class PesanController extends Controller
 {
     public function riwayat()
     {
-        // PERUBAHAN: 'Lunas' sekarang termasuk dalam pesanan aktif karena belum selesai (diambil).
         $pesananAktif = Pesan::where('user_id', Auth::id())
                               ->whereIn('status', ['Menunggu Konfirmasi', 'Menunggu Pembayaran', 'Diproses', 'Lunas'])
                               ->latest()
@@ -43,14 +42,17 @@ class PesanController extends Controller
     }
 
     /**
-     * LANGKAH 1: Memvalidasi dan menyimpan data diri ke session.
+     * LANGKAH 1: Validasi Data Diri & Metode Pengiriman
      */
     public function postStep1(Request $request)
     {
+        // PERUBAHAN: Validasi dinamis untuk alamat
         $validatedData = $request->validate([
             'nama_pelanggan' => 'required|string|max:255',
             'no_hp' => 'required|string|max:20',
-            'alamat' => 'required|string',
+            'metode_pengiriman' => 'required|string|in:antar_jemput,mandiri', // Wajib pilih metode
+            // Alamat wajib diisi HANYA JIKA metode adalah antar_jemput
+            'alamat' => 'required_if:metode_pengiriman,antar_jemput|nullable|string', 
         ]);
 
         $request->session()->put('pesan', $validatedData);
@@ -104,11 +106,14 @@ class PesanController extends Controller
         $pesananData = $request->session()->get('pesan');
         $finalData = array_merge($pesananData, $validatedData);
 
-        // --- PENYESUAIAN PENTING ---
-        $finalData['user_id'] = Auth::id(); // Tambahkan ID user yang membuat pesanan
-        $finalData['status'] = 'Menunggu Konfirmasi'; // Atur status awal
+        $finalData['user_id'] = Auth::id(); 
+        $finalData['status'] = 'Menunggu Konfirmasi';
 
-        // Gunakan model 'Pesan' untuk membuat data baru
+        // Pastikan jika metode mandiri, alamat diisi null (agar aman di DB)
+        if (isset($finalData['metode_pengiriman']) && $finalData['metode_pengiriman'] == 'mandiri') {
+            $finalData['alamat'] = null;
+        }
+
         Pesan::create($finalData);
 
         $request->session()->forget('pesan');

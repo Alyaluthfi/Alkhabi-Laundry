@@ -15,6 +15,7 @@ class Pesan extends Model
         'user_id',
         'nama_pelanggan',
         'no_hp',
+        'metode_pengiriman',
         'alamat',
         'jenis_layanan',
         'paket',
@@ -35,7 +36,6 @@ class Pesan extends Model
 
     public function feedback()
     {
-        // Pastikan nama model Feedback benar
         return $this->hasOne(Feedback::class, 'pesanan_id');
     }
 }

@@ -12,16 +12,23 @@ return new class extends Migration
             $table->id();
             $table->string('nama_pelanggan');
             $table->string('no_hp');
-            $table->text('alamat');
-            $table->string('jenis_layanan'); 
-            $table->string('paket'); 
+            
+            // PERUBAHAN 1: Tambah kolom metode_pengiriman
+            // Values: 'antar_jemput' atau 'mandiri'
+            $table->string('metode_pengiriman'); 
+
+            // PERUBAHAN 2: Alamat dibuat nullable (boleh kosong jika pilih Mandiri/Drop-off)
+            $table->text('alamat')->nullable(); 
+            
+            $table->string('jenis_layanan')->nullable(); // Nullable karena diisi di step 2
+            $table->string('paket')->nullable(); // Nullable karena diisi di step 3
             
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
             $table->string('status')->default('Menunggu Konfirmasi');
             
-            $table->decimal('berat', 8, 2)->nullable(); // contoh: 4.50 kg
-            $table->unsignedInteger('total_harga')->nullable(); // contoh: 45000
+            $table->decimal('berat', 8, 2)->nullable();
+            $table->unsignedInteger('total_harga')->nullable();
 
             $table->timestamps();
         });
